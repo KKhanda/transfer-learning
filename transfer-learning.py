@@ -1,7 +1,7 @@
 from keras import applications
 from keras import backend as K
 from keras.models import Model
-from keras.layers import Dense, AveragePooling2D, Dropout, Flatten, Input
+from keras.layers import Dense, AveragePooling2D, Dropout, Flatten, Input, Convolution2D
 from keras.preprocessing.image import ImageDataGenerator
 import ssl
 
@@ -26,19 +26,20 @@ else:
 model = applications.InceptionV3(input_tensor=input_tensor, weights="imagenet", include_top=False)
 model.summary()
 
-for layer in model.layers:
+for layer in model.layers[:-1]:
     layer.trainable = False
 
 output = model.output
-output = AveragePooling2D((8, 8), padding='valid', name='avg_pool')(output)
+output = AveragePooling2D((2, 2), padding='valid', name='avg_pool')(output)
 output = Dropout(0.4)(output)
+output = Convolution2D(2048, (4, 4), activation='relu')(output)
 output = Flatten()(output)
-# output = Dense(units=128, activation='relu')(output)
+output = Dense(units=128, activation='relu')(output)
 output = Dense(units=2, activation='softmax')(output)
 
 new_model = Model(inputs=model.input, outputs=output)
 
 new_model.compile(optimizer='SGD', loss='binary_crossentropy', metrics=['accuracy'])
 
-new_model.fit_generator(training_set, steps_per_epoch=10.0, epochs=3,
-                        validation_data=test_set, validation_steps=10.0)
+info = new_model.fit_generator(training_set, steps_per_epoch=10.0, epochs=3,
+                               validation_data=test_set, validation_steps=10.0)

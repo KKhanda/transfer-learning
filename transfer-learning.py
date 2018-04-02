@@ -1,5 +1,3 @@
-# !pip install -q wget
-import wget as wg
 from keras import applications
 from keras import backend as K
 from keras.models import Model
